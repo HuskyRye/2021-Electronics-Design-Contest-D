@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Start Video Stream
+Exec=lxterminal -e /home/pi/Desktop/startVideoStream.sh
+Terminal=false
+MultipleArgs=false
+Type=Application
+Categories=Application;Development;
+StartupNotify=true

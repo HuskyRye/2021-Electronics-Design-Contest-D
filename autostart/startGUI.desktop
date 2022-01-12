@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Start GUI
+Exec=/home/pi/Desktop/startGUI.sh
+Terminal=false
+MultipleArgs=false
+Type=Application
+Categories=Application;Development;
+StartupNotify=true

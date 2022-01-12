@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="cn">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+            font-family: 'Microsoft YaHei', 'Consolas';
+        }
+
+        .card {
+            background-color: rgba(235, 235, 235);
+            border-radius: 2vw;
+            text-align: center;
+            font-weight: bold;
+            padding: 2vw 1vw;
+            margin-top: 2vw;
+            margin-left: 1.5vw;
+            float: left;
+            /* vertical-align: baseline; */
+        }
+
+        .video {
+            padding: 0px;
+            overflow: hidden;
+            margin-right: 0;
+        }
+
+        img {
+            width: auto;
+            height: 52.25vw;
+            vertical-align: middle;
+        }
+
+        .small {
+            font-size: 2vw;
+        }
+
+        .big {
+            font-size: 4vw;
+        }
+
+        #degree .big {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(180deg, #7cc0e2, #256af3 50%, #252fff);
+        }
+
+        #length .big {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(180deg, #ff9fe1, #9d44fd 50%, #8727ff);
+        }
+
+        #gravity .big {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(180deg, #7cc0e2, #256af3 50%, #252fff);
+        }
+
+        .disable {
+            pointer-events: none;
+        }
+
+        #calibration {
+            width: fit-content;
+            height: fit-content;
+            position: absolute;
+            margin: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* left: 0vw;
+            border-radius: 0 2vw 2vw 0; */
+            right: 0vw;
+            border-radius: 2vw 0 0 2vw;
+            top: 50%;
+            transform: translate(0, -50%);
+        }
+
+        #calibration .card {
+            margin-top: 1.5vw;
+            margin-left: 1.5vw;
+        }
+    </style>
+    <script src='./qwebchannel.js'></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            new QWebChannel(qt.webChannelTransport, function (channel) {
+                window.backend = channel.objects.obj;
+            });
+        });
+
+        let start = false;
+        function on_start() {
+            window.backend.on_start();
+            start = true;
+            document.getElementById("on_start_div").classList.add("disable");
+            document.getElementById("on_start").innerText = "测量中";
+
+            let i = 0;
+            const measuring = ['', '.', '..', '...'];
+            let interval = setInterval(function () {
+                if (!start) {
+                    window.clearInterval(interval);
+                    return;
+                }
+                document.getElementById("degree").innerHTML = `<span class="big">wait${measuring[i]}</span>`;
+                document.getElementById("length").innerHTML = `<span class="big">wait${measuring[i]}</span>`;
+                i = (i + 1) % measuring.length;
+            }, 1000);
+        }
+
+        function quit() {
+            window.backend.quit()
+        }
+
+        function updateData(length, degree) {
+            start = false;
+            document.getElementById("on_start_div").classList.remove("disable");
+            document.getElementById("on_start").innerText = "一键启动";
+            document.getElementById("degree").innerHTML = `<span class="big">${degree}</span><span class="small">deg</span>`;
+            document.getElementById("length").innerHTML = `<span class="big">${length}</span><span class="small">cm</span>`;
+        }
+
+        let calibration = false;
+        function calibrate() {
+            document.getElementById("calibration").hidden = calibration;
+            calibration = !calibration
+        }
+
+        let show = true;
+        function toggleshow() {
+            window.backend.toggleshow();
+            show = !show;
+            document.getElementById("show").innerText = show ? "隐藏" : "显示";
+        }
+
+        let center = false;
+        function togglecenter() {
+            center = !center;
+            window.backend.togglecenter();
+            document.getElementById("center").innerText = center ? "关闭" : "开启";
+        }
+
+        function inputlength() {
+            window.length = prompt("请输入悬线的长度(单位cm)");
+        }
+
+        let calibrating = false;
+        function startcalibration() {
+            if (!window.length)
+                alert('请先输入线长！')
+            else {
+                window.backend.calibrate(window.length);
+                document.getElementById("start_calibrate_div").classList.add("disable");
+                calibrating = true;
+                let i = 0;
+                const measuring = ['', '.', '..', '...'];
+                let interval = setInterval(function () {
+                    if (!calibrating) {
+                        window.clearInterval(interval);
+                        return;
+                    }
+                    document.getElementById("gravity").innerHTML = `<span class="big">wait${measuring[i]}</span>`;
+                    i = (i + 1) % measuring.length;
+                }, 1000);
+            }
+        }
+
+        function updateGravity(gravity) {
+            calibrating = false;
+            document.getElementById("start_calibrate_div").classList.remove("disable");
+            document.getElementById("gravity").innerHTML = `<span class="big">${gravity}</span><span class="small">m/s²</span>`;
+        }
+
+    </script>
+</head>
+
+<body onselectstart="return false">
+    <div class="card video">
+        <img src=" empty3.png">
+    </div>
+    <div class="card video">
+        <img src=" empty3.png">
+    </div>
+    <div class="card" style="width:33vw;" onclick="quit()">
+        <span class="small">全国大学生</span>
+        <br>
+        <span class="big" style="color: #f64035;">电子设计竞赛</span>
+    </div>
+    <div class="card" style="width:33vw;" onclick="on_start()" id="on_start_div">
+        <span id="on_start" style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image:
+            linear-gradient(180deg,#FF6700,#FF6700);font-size: 5vw">
+            一键启动
+        </span>
+    </div>
+    <div class="card" style="width: 15vw;" onclick="calibrate()">
+        <span class="small">系统</span>
+        <br>
+        <span class="big"
+            style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image: linear-gradient(180deg,#FFCB39,#FFCB39);">
+            校准
+        </span>
+    </div>
+    <div class="card" style="width: 15vw;" onclick="toggleshow()">
+        <span class="small" id="show">隐藏</span>
+        <br>
+        <span class="big"
+            style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image: linear-gradient(180deg, #4bd264, #4bd264);">
+            框选
+        </span>
+    </div>
+    <div class="card" style="width: 15vw;">
+        <span class="small">夹角</span><br>
+        <span id="degree"><span class="big">0.0</span><span class="small">deg</span></span>
+    </div>
+    <div class="card" style="width: 15vw;">
+        <span class="small">线长</span><br>
+        <span id="length"><span class="big">0.0</span><span class="small">cm</span></span>
+    </div>
+
+    <div id="calibration" hidden="true">
+        <div class="card" style="width: 15vw;" onclick="togglecenter()">
+            <span class="small" id="center">开启</span>
+            <br>
+            <span class="big"
+                style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image: linear-gradient(180deg,#f64035,#f64035);">
+                对正
+            </span>
+        </div>
+        <br>
+        <div class="card" style="width: 15vw;" onclick="inputlength()">
+            <span class="small">输入</span>
+            <br>
+            <span class="big"
+                style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image: linear-gradient(180deg,#FF6700,#FF6700);">
+                线长
+            </span>
+        </div>
+        <br>
+        <div class="card" id="start_calibrate_div" style="width: 15vw;" onclick="startcalibration()">
+            <span class="small">开始</span>
+            <br>
+            <span class="big"
+                style="background-clip: text;-webkit-background-clip: text;color: transparent;background-image: linear-gradient(180deg, #4bd264, #4bd264);">
+                校准
+            </span>
+        </div>
+        <br>
+        <div class="card" style="width: 15vw; margin-right: 1.2vw; margin-bottom: 1.5vw;">
+            <span class=" small">重力加速度</span><br>
+            <span id="gravity"><span class="big">9.791</span><span class="small">m/s²</span></span>
+        </div>
+    </div>
+</body>
+
+</html>
